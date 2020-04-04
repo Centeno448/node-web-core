@@ -37,7 +37,6 @@ testem.log
 .DS_Store
 Thumbs.db
 
-
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
