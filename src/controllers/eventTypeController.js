@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom');
-const EventTypeModel = require('../models/eventTypeModel').EventModel;
+const EventTypeModel = require('../models/eventTypeModel').EventTypeModel;
 const db = require('../db/database');
 
 // Gets all event types

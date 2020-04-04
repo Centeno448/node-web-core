@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi');
 
-exports.eventModel = Joi.object({
+exports.EventModel = Joi.object({
   name: Joi.string().alphanum().max(200).required(),
 
   startDate: Joi.date().required().less(Joi.ref('startDate')),
