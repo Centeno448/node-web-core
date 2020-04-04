@@ -5,7 +5,9 @@ const AddUser = Joi.object({
 
   email: Joi.string().email({ minDomainSegments: 1 }).required(),
 
-  password: Joi.string().required().min(6)
+  password: Joi.string().required().min(6),
+
+  role: Joi.string().required().max(10).pattern(new RegExp('[a-zA-Z]+'))
 });
 
 const UpdateUser = Joi.object({

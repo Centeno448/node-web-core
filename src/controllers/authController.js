@@ -3,6 +3,7 @@ const db = require('../db/database');
 const JWT = require('jsonwebtoken');
 const TokenConfig = require('../apiConfig');
 const UserModels = require('../models/userModel');
+const Crypto = require('crypto');
 
 const register = async (request, h) => {
   try {
@@ -37,17 +38,19 @@ const register = async (request, h) => {
       }
     }
 
-    // value.Password = Crypto.createHash('sha256')
-    //   .update(value.Password)
-    //   .digest('hex');
+    value.password = Crypto.createHash('sha256')
+      .update(value.password)
+      .digest('hex');
 
     query = {
       text:
-        'INSERT INTO public."AppUser"("UserName", "Email", "Password") VALUES ($1, $2, $3);',
-      values: [value.username, value.email, value.password]
+        'INSERT INTO public."AppUser" ("UserName", "Email", "Password", "Role") VALUES ($1, $2, $3, $4);',
+      values: [value.username, value.email, value.password, value.role]
     };
 
-    return h.respose().code(201);
+    await db.query(query);
+
+    return h.response().code(201);
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -71,6 +74,10 @@ const login = async (request, h) => {
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
     }
+
+    value.password = Crypto.createHash('sha256')
+      .update(value.password)
+      .digest('hex');
 
     var query = {
       text:

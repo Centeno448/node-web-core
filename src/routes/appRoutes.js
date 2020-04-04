@@ -1,4 +1,9 @@
-const userRoutes = require('./userRoutes');
-const authRoutes = require('./authRoutes');
+const UserRoutes = require('./userRoutes');
+const AuthRoutes = require('./authRoutes');
+const EventTypeRoutes = require('./eventTypeRoutes');
 
-exports.routes = [...userRoutes.routes, ...authRoutes.routes];
+exports.routes = [
+  ...UserRoutes.routes,
+  ...AuthRoutes.routes,
+  ...EventTypeRoutes.routes
+];

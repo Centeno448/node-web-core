@@ -6,7 +6,7 @@ const Crypto = require('crypto');
 const getAll = async (request, h) => {
   try {
     const { rows } = await db.query(
-      'SELECT "AppUserId" AS "id", "UserName" AS "username", "Email" as "email", "Password" AS "password" FROM Public."AppUser"'
+      'SELECT "AppUserId" AS "id", "UserName" AS "username", "Email" as "email" FROM Public."AppUser"'
     );
 
     return rows;
@@ -68,14 +68,14 @@ const addUser = async (request, h) => {
   }
 
   try {
-    // value.Password = Crypto.createHash('sha256')
-    //   .update(value.Password)
-    //   .digest('hex');
+    value.Password = Crypto.createHash('sha256')
+      .update(value.Password)
+      .digest('hex');
 
     const query = {
       text:
-        'INSERT INTO public."AppUser"("UserName", "Email", "Password") VALUES ($1, $2, $3);',
-      values: [value.username, value.email, value.password]
+        'INSERT INTO public."AppUser"("UserName", "Email", "Password", "Role") VALUES ($1, $2, $3, $4);',
+      values: [value.username, value.email, value.password, value.role]
     };
 
     await db.query(query);
