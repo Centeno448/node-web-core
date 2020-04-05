@@ -7,9 +7,12 @@ const refreshTokenSecret =
 
 const accessTokenExpiresIn = '1h';
 
+const accessTokenExpiresInSeconds = '3600';
+
 module.exports = {
   securityKey: securityKey,
   accessTokenSecret,
   refreshTokenSecret,
-  accessTokenExpiresIn
+  accessTokenExpiresIn,
+  accessTokenExpiresInSeconds
 };

@@ -91,11 +91,22 @@ const login = async (request, h) => {
       throw Boom.notFound('USER_NOT_FOUND');
     }
 
-    const accessToken = JWT.sign(rows[0], TokenConfig.accessTokenSecret, {
-      expiresIn: TokenConfig.accessTokenExpiresIn
-    });
+    const { id, username } = rows[0];
 
-    const refreshToken = JWT.sign(rows[0], TokenConfig.refreshTokenSecret);
+    const accessToken = JWT.sign(
+      { id, username },
+      TokenConfig.accessTokenSecret,
+      {
+        expiresIn: TokenConfig.accessTokenExpiresIn
+      }
+    );
+
+    const expiresIn = TokenConfig.accessTokenExpiresInSeconds;
+
+    const refreshToken = JWT.sign(
+      { id, username },
+      TokenConfig.refreshTokenSecret
+    );
 
     query = {
       text: 'INSERT INTO public."RefreshToken" ("Token") VALUES ($1)',
@@ -104,7 +115,7 @@ const login = async (request, h) => {
 
     await db.query(query);
 
-    return { accessToken, refreshToken };
+    return { id, username, accessToken, refreshToken, expiresIn };
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
