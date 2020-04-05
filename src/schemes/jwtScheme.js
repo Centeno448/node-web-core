@@ -19,7 +19,7 @@ module.exports = {
           ApiConfig.accessTokenSecret,
           (error, user) => {
             if (error) {
-              throw Boom.forbidden();
+              throw Boom.unauthorized();
             }
 
             return user;
