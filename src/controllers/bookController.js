@@ -1,14 +1,13 @@
 const Boom = require('@hapi/boom');
-const EventModel = require('../models/eventModel').EventModel;
+const BookModel = require('../models/bookModel').BookModel;
 const db = require('../db/database');
-const Joi = require('@hapi/joi');
 
-// Gets all events
-const getAllEvents = async (request, h) => {
+// Gets all books
+const getAllBooks = async (request, h) => {
   try {
     var query = {
       text:
-        'SELECT E."Name" AS "name", E."StartAt" AS "startAt", E."EndAt" AS "endAt", ET."Name" AS "eventType" FROM public."Event" E JOIN public."EventType" ET ON E."EventTypeId" = ET."EventTypeId" '
+        'SELECT "BookId" AS "bookId", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book"'
     };
     const { rows } = await db.query(query);
 
@@ -19,8 +18,8 @@ const getAllEvents = async (request, h) => {
   }
 };
 
-// Gets an event by id
-const getEventById = async (request, h) => {
+// Gets a book by id
+const getBookById = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -29,7 +28,7 @@ const getEventById = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT COUNT("EventId") FROM public."Event" WHERE "EventId" = $1',
+      text: 'SELECT COUNT("BookId") FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
@@ -41,13 +40,13 @@ const getEventById = async (request, h) => {
 
     query = {
       text:
-        'SELECT E."Name" AS "name", E."StartAt" AS "startAt", E."EndAt" AS "endAt", ET."Name" AS "eventType" FROM public."Event" E JOIN public."EventType" ET ON E."EventTypeId" = ET."EventTypeId" WHERE E."EventId" = $1',
+        'SELECT "BookId" AS "bookId", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
-    const event = await (await db.query(query)).rows[0];
+    const book = await (await db.query(query)).rows[0];
 
-    return event;
+    return book;
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -60,10 +59,11 @@ const getEventById = async (request, h) => {
   }
 };
 
-// Adds a new event
-const addEvent = async (request, h) => {
+// Adds a new book
+const addBook = async (request, h) => {
   try {
-    const { value, error } = EventModel.validate(request.payload);
+    const { value, error } = BookModel.validate(request.payload);
+    console.log(value);
 
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
@@ -71,8 +71,8 @@ const addEvent = async (request, h) => {
 
     var query = {
       text:
-        'INSERT INTO public."Event" ("Name", "StartAt", "EndAt", "EventTypeId") VALUES ($1, $2, $3, $4)',
-      values: [value.name, value.startAt, value.endAt, value.eventTypeId]
+        'INSERT INTO public."Book" ("Name", "Author", "PublicationDate") VALUES ($1, $2, $3)',
+      values: [value.name, value.author, value.publicationDate]
     };
 
     await db.query(query);
@@ -90,8 +90,8 @@ const addEvent = async (request, h) => {
   }
 };
 
-// Updates an event
-const updateEvent = async (request, h) => {
+// Updates a book
+const updateBook = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -99,14 +99,14 @@ const updateEvent = async (request, h) => {
       throw Boom.badRequest('BAD_ID');
     }
 
-    const { value, error } = EventModel.validate(request.payload);
+    const { value, error } = BookModel.validate(request.payload);
 
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
     }
 
     var query = {
-      text: 'SELECT COUNT("EventId") FROM public."Event" WHERE "EventId" = $1',
+      text: 'SELECT COUNT("BookId") FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
@@ -118,8 +118,8 @@ const updateEvent = async (request, h) => {
 
     query = {
       text:
-        'UPDATE public."Event" SET "Name" = $1, "StartAt" = $2, "EndAt" = $3, "EventTypeId" = $4 WHERE "EventId" = $5',
-      values: [value.name, value.startAt, value.endAt, value.eventTypeId, id]
+        'UPDATE public."Book" SET "Name" = $1, "Author" = $2, "PublicationDate" = $3 WHERE "BookId" = $4',
+      values: [value.name, value.author, value.publicationDate, id]
     };
 
     await db.query(query);
@@ -137,8 +137,8 @@ const updateEvent = async (request, h) => {
   }
 };
 
-// Deletes an event
-const deleteEvent = async (request, h) => {
+// Deletes a book
+const deleteBook = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -147,7 +147,7 @@ const deleteEvent = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT COUNT("EventId") FROM public."Event" WHERE "EventId" = $1',
+      text: 'SELECT COUNT("BookId") FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
@@ -158,7 +158,7 @@ const deleteEvent = async (request, h) => {
     }
 
     query = {
-      text: 'DELETE FROM public."Event" WHERE "EventId" = $1',
+      text: 'DELETE FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
@@ -178,9 +178,9 @@ const deleteEvent = async (request, h) => {
 };
 
 module.exports = {
-  getAllEvents,
-  getEventById,
-  addEvent,
-  updateEvent,
-  deleteEvent
+  getAllBooks,
+  getBookById,
+  addBook,
+  updateBook,
+  deleteBook
 };
