@@ -180,7 +180,7 @@ const refresh = async (request, h) => {
     const { rows } = await db.query(query);
 
     if (!rows[0]) {
-      throw Boom.forbidden();
+      throw Boom.unauthorized();
     }
 
     const accessToken = JWT.verify(
@@ -188,7 +188,7 @@ const refresh = async (request, h) => {
       TokenConfig.refreshTokenSecret,
       (err, user) => {
         if (err) {
-          throw Boom.forbidden();
+          throw Boom.unauthorized();
         }
 
         const token = JWT.sign(
