@@ -10,14 +10,6 @@ const AddUser = Joi.object({
   role: Joi.string().required().max(10).pattern(new RegExp('[a-zA-Z]+'))
 });
 
-const UpdateUser = Joi.object({
-  username: Joi.string().alphanum().min(4).max(100).required(),
-
-  email: Joi.string().email({ minDomainSegments: 1 }).required(),
-
-  password: Joi.string().required().min(6)
-});
-
 const LoginUser = Joi.object({
   username: Joi.string().alphanum().min(4).max(100).required(),
 
@@ -25,7 +17,6 @@ const LoginUser = Joi.object({
 });
 
 module.exports = {
-  UpdateUser,
   AddUser,
   LoginUser
 };

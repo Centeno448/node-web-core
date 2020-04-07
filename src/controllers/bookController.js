@@ -7,7 +7,7 @@ const getAllBooks = async (request, h) => {
   try {
     var query = {
       text:
-        'SELECT "BookId" AS "bookId", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book"'
+        'SELECT "BookId" AS "id", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book" ORDER BY "BookId"'
     };
     const { rows } = await db.query(query);
 
@@ -40,7 +40,7 @@ const getBookById = async (request, h) => {
 
     query = {
       text:
-        'SELECT "BookId" AS "bookId", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book" WHERE "BookId" = $1',
+        'SELECT "BookId" AS "id", "Name" AS "name", "Author" AS "author", "PublicationDate" AS "publicationDate" FROM public."Book" WHERE "BookId" = $1',
       values: [id]
     };
 
@@ -63,7 +63,6 @@ const getBookById = async (request, h) => {
 const addBook = async (request, h) => {
   try {
     const { value, error } = BookModel.validate(request.payload);
-    console.log(value);
 
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
