@@ -18,12 +18,11 @@ const register = async (request, h) => {
     }
 
     var query = {
-      text:
-        'SELECT "UserName" AS "username", "Email" AS "email" FROM public."AppUser" WHERE "UserName" = $1 OR "Email" = $2',
+      text: 'SELECT * FROM public."AppUser" WHERE username = $1 OR email = $2',
       values: [value.username, value.email]
     };
 
-    const { rows } = await db.query(query);
+    var { rows } = await db.query(query);
 
     if (rows[0]) {
       const dbUser = rows[0].username;
@@ -38,14 +37,31 @@ const register = async (request, h) => {
       }
     }
 
+    if (value.role === 'admin') {
+      throw Boom.badRequest('BAD_PAYLOAD');
+    }
+
+    query = {
+      text: 'SELECT id FROM public."AppRole" WHERE name = $1',
+      values: [value.role]
+    };
+
+    var { rows } = await db.query(query);
+
+    if (!rows[0]) {
+      throw Boom.badRequest('BAD_PAYLOAD');
+    }
+
+    const id = rows[0].id;
+
     value.password = Crypto.createHash('sha256')
       .update(value.password)
       .digest('hex');
 
     query = {
       text:
-        'INSERT INTO public."AppUser" ("UserName", "Email", "Password", "Role") VALUES ($1, $2, $3, $4);',
-      values: [value.username, value.email, value.password, value.role]
+        'INSERT INTO public."AppUser" (username, email, password, role) VALUES ($1, $2, $3, $4);',
+      values: [value.username, value.email, value.password, id]
     };
 
     await db.query(query);
@@ -81,7 +97,7 @@ const login = async (request, h) => {
 
     var query = {
       text:
-        'SELECT "AppUserId" AS "id", "UserName" AS "username" FROM public."AppUser" WHERE "UserName" = $1 AND "Password" = $2',
+        'SELECT * FROM public."AppUser" WHERE username = $1 AND password = $2',
       values: [value.username, value.password]
     };
 
@@ -109,7 +125,7 @@ const login = async (request, h) => {
     );
 
     query = {
-      text: 'INSERT INTO public."RefreshToken" ("Token") VALUES ($1)',
+      text: 'INSERT INTO public."RefreshToken" (token) VALUES ($1)',
       values: [refreshToken]
     };
 
@@ -141,7 +157,7 @@ const logout = async (request, h) => {
     }
 
     var query = {
-      text: 'DELETE FROM public."RefreshToken" WHERE "Token" = $1',
+      text: 'DELETE FROM public."RefreshToken" WHERE token = $1',
       values: [token]
     };
 
@@ -173,7 +189,7 @@ const refresh = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT "Token" FROM public."RefreshToken" WHERE "Token" = $1',
+      text: 'SELECT token FROM public."RefreshToken" WHERE token = $1',
       values: [token]
     };
 

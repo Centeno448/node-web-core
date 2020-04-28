@@ -1,14 +1,15 @@
 const Boom = require('@hapi/boom');
-const BookModel = require('../models/bookModel').BookModel;
-const BookUpdateModel = require('../models/bookModel').BookUpdateModel;
+const BookCategoryModel = require('../models/bookCategoryModel')
+  .BookCategoryModel;
 const db = require('../db/database');
 
-// Gets all books
-const getAllBooks = async (request, h) => {
+// Gets all book categories
+const getAllCategories = async (request, h) => {
   try {
+    //console.log(request.auth.credentials);
+
     var query = {
-      text:
-        'SELECT B.*, BC.name AS "categoryName" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category ORDER BY B.id'
+      text: 'SELECT * FROM public."BookCategory" ORDER BY id'
     };
     const { rows } = await db.query(query);
 
@@ -19,8 +20,8 @@ const getAllBooks = async (request, h) => {
   }
 };
 
-// Gets a book by id
-const getBookById = async (request, h) => {
+// Gets a category by id
+const getCategoryById = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -29,7 +30,7 @@ const getBookById = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT COUNT(id) FROM public."Book" WHERE id = $1',
+      text: 'SELECT COUNT(id) FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
 
@@ -40,8 +41,7 @@ const getBookById = async (request, h) => {
     }
 
     query = {
-      text:
-        'SELECT B.*, BC.name AS "categoryName" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category WHERE B.id = $1',
+      text: 'SELECT * FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
 
@@ -60,47 +60,19 @@ const getBookById = async (request, h) => {
   }
 };
 
-// Adds a new book
-const addBook = async (request, h) => {
+// Adds a new category
+const addCategory = async (request, h) => {
   try {
-    const { value, error } = BookModel.validate(request.payload);
+    const { value, error } = BookCategoryModel.validate(request.payload);
 
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
     }
 
-    var query = {
-      text: 'SELECT id FROM public."AppUser" WHERE id = $1',
-      values: [value.user]
-    };
-
-    var { rows } = await db.query(query);
-
-    if (!rows[0]) {
-      throw Boom.badRequest('BAD_PAYLOAD');
-    }
-
-    query = {
-      text: 'SELECT id FROM public."BookCategory" WHERE id = $1',
-      values: [value.category]
-    };
-
-    var { rows } = await db.query(query);
-
-    if (!rows[0]) {
-      throw Boom.badRequest('BAD_PAYLOAD');
-    }
-
     query = {
       text:
-        'INSERT INTO public."Book" (name, author, "publicationDate", category, "user") VALUES ($1, $2, $3, $4, $5)',
-      values: [
-        value.name,
-        value.author,
-        value.publicationDate,
-        value.category,
-        value.user
-      ]
+        'INSERT INTO public."BookCategory" (name, description) VALUES ($1, $2)',
+      values: [value.name, value.description]
     };
 
     await db.query(query);
@@ -118,8 +90,8 @@ const addBook = async (request, h) => {
   }
 };
 
-// Updates a book
-const updateBook = async (request, h) => {
+// Updates a category
+const updateCategory = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -127,14 +99,14 @@ const updateBook = async (request, h) => {
       throw Boom.badRequest('BAD_ID');
     }
 
-    const { value, error } = BookUpdateModel.validate(request.payload);
+    const { value, error } = BookCategoryModel.validate(request.payload);
 
     if (error) {
       throw Boom.badRequest('BAD_PAYLOAD');
     }
 
     var query = {
-      text: 'SELECT COUNT(id) FROM public."Book" WHERE id = $1',
+      text: 'SELECT COUNT(id) FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
 
@@ -146,14 +118,8 @@ const updateBook = async (request, h) => {
 
     query = {
       text:
-        'UPDATE public."Book" SET name = $1, author = $2, "publicationDate" = $3, category = $4 WHERE id = $5',
-      values: [
-        value.name,
-        value.author,
-        value.publicationDate,
-        value.category,
-        id
-      ]
+        'UPDATE public."BookCategory" SET name = $1, description = $2 WHERE id = $3',
+      values: [value.name, value.description, id]
     };
 
     await db.query(query);
@@ -171,8 +137,8 @@ const updateBook = async (request, h) => {
   }
 };
 
-// Deletes a book
-const deleteBook = async (request, h) => {
+// Deletes a category
+const deleteCategory = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -181,7 +147,7 @@ const deleteBook = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT COUNT(id) FROM public."Book" WHERE id = $1',
+      text: 'SELECT COUNT(id) FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
 
@@ -192,7 +158,7 @@ const deleteBook = async (request, h) => {
     }
 
     query = {
-      text: 'DELETE FROM public."Book" WHERE id = $1',
+      text: 'DELETE FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
 
@@ -212,9 +178,9 @@ const deleteBook = async (request, h) => {
 };
 
 module.exports = {
-  getAllBooks,
-  getBookById,
-  addBook,
-  updateBook,
-  deleteBook
+  getAllCategories,
+  getCategoryById,
+  addCategory,
+  updateCategory,
+  deleteCategory
 };
