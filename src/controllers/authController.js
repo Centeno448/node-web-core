@@ -97,7 +97,7 @@ const login = async (request, h) => {
 
     var query = {
       text:
-        'SELECT * FROM public."AppUser" WHERE username = $1 AND password = $2',
+        'SELECT U.*, R.name FROM public."AppUser" U JOIN public."AppRole" R ON R.id = U.role WHERE username = $1 AND password = $2',
       values: [value.username, value.password]
     };
 
@@ -108,9 +108,10 @@ const login = async (request, h) => {
     }
 
     const { id, username } = rows[0];
+    const role = rows[0].name;
 
     const accessToken = JWT.sign(
-      { id, username },
+      { id, username, role },
       TokenConfig.accessTokenSecret,
       {
         expiresIn: TokenConfig.accessTokenExpiresIn
@@ -120,7 +121,7 @@ const login = async (request, h) => {
     const expiresIn = TokenConfig.accessTokenExpiresInSeconds;
 
     const refreshToken = JWT.sign(
-      { id, username },
+      { id, username, role },
       TokenConfig.refreshTokenSecret
     );
 
@@ -131,7 +132,7 @@ const login = async (request, h) => {
 
     await db.query(query);
 
-    return { id, username, accessToken, refreshToken, expiresIn };
+    return { id, username, role, accessToken, refreshToken, expiresIn };
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -208,7 +209,7 @@ const refresh = async (request, h) => {
         }
 
         const token = JWT.sign(
-          { id: user.id, username: user.username },
+          { id: user.id, username: user.username, role: user.role },
           TokenConfig.accessTokenSecret,
           { expiresIn: TokenConfig.accessTokenExpiresIn }
         );

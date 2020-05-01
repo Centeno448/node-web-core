@@ -11,9 +11,9 @@ const AddUser = Joi.object({
 });
 
 const LoginUser = Joi.object({
-  username: Joi.string().alphanum().min(4).max(100).required(),
+  username: Joi.string().alphanum().required(),
 
-  password: Joi.string().required().min(6)
+  password: Joi.string().required()
 });
 
 module.exports = {

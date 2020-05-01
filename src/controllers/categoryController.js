@@ -158,6 +158,17 @@ const deleteCategory = async (request, h) => {
     }
 
     query = {
+      text: 'SELECT COUNT(*) FROM public."Book" WHERE category = $1',
+      values: [id]
+    };
+
+    const inUse = +(await (await db.query(query)).rows[0].count);
+
+    if (inUse > 0) {
+      throw Boom.badRequest('IN_USE');
+    }
+
+    query = {
       text: 'DELETE FROM public."BookCategory" WHERE id = $1',
       values: [id]
     };
