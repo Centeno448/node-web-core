@@ -8,7 +8,7 @@ const getAllBooks = async (request, h) => {
   try {
     var query = {
       text:
-        'SELECT B.*, BC.name AS "categoryName" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category ORDER BY B.id'
+        'SELECT B.id, B.name, B.author, B."publicationDate", BC.name AS "category", U.username as "owner" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category JOIN public."AppUser" U ON U.id = B.user ORDER BY B.id'
     };
     const { rows } = await db.query(query);
 
@@ -41,7 +41,7 @@ const getBookById = async (request, h) => {
 
     query = {
       text:
-        'SELECT B.*, BC.name AS "categoryName" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category WHERE B.id = $1',
+        'SELECT B.id, B.name, B.author, B."publicationDate", BC.name AS "category", U.username as "owner" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category JOIN public."AppUser" U ON U.id = B.user WHERE B.id = $1',
       values: [id]
     };
 
@@ -146,12 +146,13 @@ const updateBook = async (request, h) => {
 
     query = {
       text:
-        'UPDATE public."Book" SET name = $1, author = $2, "publicationDate" = $3, category = $4 WHERE id = $5',
+        'UPDATE public."Book" SET name = $1, author = $2, "publicationDate" = $3, category = $4, "user" = $5 WHERE id = $6',
       values: [
         value.name,
         value.author,
         value.publicationDate,
         value.category,
+        value.user,
         id
       ]
     };

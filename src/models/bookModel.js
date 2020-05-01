@@ -19,5 +19,7 @@ exports.BookUpdateModel = Joi.object({
 
   publicationDate: Joi.date().format('YYYY-MM-DD').required(),
 
-  category: Joi.number().integer().required()
+  category: Joi.number().integer().required(),
+
+  user: Joi.number().integer().required()
 });
