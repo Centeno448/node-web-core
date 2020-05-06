@@ -23,3 +23,7 @@ exports.BookUpdateModel = Joi.object({
 
   user: Joi.number().integer().required()
 });
+
+exports.BookByUserModel = Joi.object({
+  user: Joi.number().integer().required()
+});

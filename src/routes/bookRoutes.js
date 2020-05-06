@@ -8,6 +8,11 @@ const routes = [
   },
   {
     method: 'POST',
+    path: '/book-user',
+    handler: BookController.getBookByUser
+  },
+  {
+    method: 'POST',
     path: '/book',
     handler: BookController.addBook
   },

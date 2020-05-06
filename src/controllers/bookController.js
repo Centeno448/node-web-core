@@ -1,6 +1,7 @@
 const Boom = require('@hapi/boom');
 const BookModel = require('../models/bookModel').BookModel;
 const BookUpdateModel = require('../models/bookModel').BookUpdateModel;
+const BookByUserModel = require('../models/bookModel').BookByUserModel;
 const db = require('../db/database');
 
 // Gets all books
@@ -48,6 +49,36 @@ const getBookById = async (request, h) => {
     const book = await (await db.query(query)).rows[0];
 
     return book;
+  } catch (e) {
+    if (e.isBoom) {
+      throw new Boom.Boom(e.output.payload.message, {
+        statusCode: e.output.statusCode
+      });
+    } else {
+      console.log(e);
+      throw Boom.internal();
+    }
+  }
+};
+
+// Gets a book by user
+const getBookByUser = async (request, h) => {
+  try {
+    const { value, error } = BookByUserModel.validate(request.payload);
+
+    if (error) {
+      throw Boom.badRequest('BAD_PAYLOAD');
+    }
+
+    var query = {
+      text:
+        'SELECT B.id, B.name, B.author, B."publicationDate", BC.name AS "category", U.username as "owner" FROM public."Book" B JOIN public."BookCategory" BC ON BC.id = B.category JOIN public."AppUser" U ON U.id = B.user WHERE B."user" = $1',
+      values: [value.user]
+    };
+
+    const books = await (await db.query(query)).rows;
+
+    return books;
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -145,6 +176,17 @@ const updateBook = async (request, h) => {
     }
 
     query = {
+      text: 'SELECT COUNT(id) FROM public."AppUser" WHERE id = $1',
+      values: [value.user]
+    };
+
+    const validUser = +(await (await db.query(query)).rows[0].count);
+
+    if (validUser === 0) {
+      throw Boom.badRequest('BAD_PAYLOAD');
+    }
+
+    query = {
       text:
         'UPDATE public."Book" SET name = $1, author = $2, "publicationDate" = $3, category = $4, "user" = $5 WHERE id = $6',
       values: [
@@ -215,6 +257,7 @@ const deleteBook = async (request, h) => {
 module.exports = {
   getAllBooks,
   getBookById,
+  getBookByUser,
   addBook,
   updateBook,
   deleteBook

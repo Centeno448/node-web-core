@@ -10,7 +10,7 @@ const getAllExchanges = async (request, h) => {
 
     var query = {
       text:
-        'SELECT BE.*, TU.username AS "toUserName", FU.username AS "fromUserName", TB.name AS "toBookName", FB.name AS "fromBookName" FROM public."BookExchange" BE JOIN public."AppUser" TU ON TU.id = BE."toUser" JOIN public."AppUser" FU ON FU.id = BE."fromUser" JOIN public."Book" TB ON TB.id = BE."toBook"  JOIN public."Book" FB ON FB.id = BE."fromBook"'
+        'SELECT BE.*, TU.username AS "toUser", FU.username AS "fromUser", TB.name AS "toBook", FB.name AS "fromBook" FROM public."BookExchange" BE JOIN public."AppUser" TU ON TU.id = BE."toUser" JOIN public."AppUser" FU ON FU.id = BE."fromUser" JOIN public."Book" TB ON TB.id = BE."toBook"  JOIN public."Book" FB ON FB.id = BE."fromBook"'
     };
     const { rows } = await db.query(query);
 
@@ -111,6 +111,22 @@ const addExchange = async (request, h) => {
         value.toBook,
         value.exchangeDate
       ]
+    };
+
+    await db.query(query);
+
+    query = {
+      text:
+        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+      values: [value.toUser, value.fromBook, value.fromUser]
+    };
+
+    await db.query(query);
+
+    query = {
+      text:
+        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+      values: [value.fromUser, value.toBook, value.toUser]
     };
 
     await db.query(query);
