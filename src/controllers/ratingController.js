@@ -1,6 +1,5 @@
 const Boom = require('@hapi/boom');
 const RatingModel = require('../models/ratingModel').RatingModel;
-const RatingUpdateModel = require('../models/ratingModel').RatingUpdateModel;
 const db = require('../db/database');
 
 // Gets all ratings
@@ -9,7 +8,8 @@ const getAllRatings = async (request, h) => {
     //console.log(request.auth.credentials);
 
     var query = {
-      text: 'SELECT * FROM public."Rating" ORDER BY id'
+      text:
+        'SELECT R.id, R.score, R.comment, TU.username AS "toUser", FU.username AS "fromUser" FROM public."Rating" R JOIN public."AppUser" TU on TU.id = R."toUser" JOIN public."AppUser" FU on FU.id = R."fromUser" ORDER BY R.id'
     };
     const { rows } = await db.query(query);
 
@@ -126,9 +126,10 @@ const updateRating = async (request, h) => {
       throw Boom.badRequest('BAD_ID');
     }
 
-    const { value, error } = RatingUpdateModel.validate(request.payload);
+    const { value, error } = RatingModel.validate(request.payload);
 
     if (error) {
+      console.log(error);
       throw Boom.badRequest('BAD_PAYLOAD');
     }
 
@@ -144,8 +145,21 @@ const updateRating = async (request, h) => {
     }
 
     query = {
-      text: 'UPDATE public."Rating" SET score = $1, comment = $2 WHERE id = $3',
-      values: [value.score, value.comment, id]
+      text:
+        'SELECT * FROM public."Rating" WHERE "toUser" = $1 AND "fromUser" = $2',
+      values: [value.toUser, value.fromUser]
+    };
+
+    var { rows } = await db.query(query);
+
+    if (rows[0].id !== id) {
+      throw Boom.badRequest('DUPLICATE_RATING');
+    }
+
+    query = {
+      text:
+        'UPDATE public."Rating" SET score = $1, comment = $2, "fromUser" = $3, "toUser" = $4 WHERE id = $5',
+      values: [value.score, value.comment, value.fromUser, value.toUser, id]
     };
 
     await db.query(query);
