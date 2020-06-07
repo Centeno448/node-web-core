@@ -228,10 +228,22 @@ const deleteBook = async (request, h) => {
       values: [id]
     };
 
-    const exists = +(await (await db.query(query)).rows[0].count);
+    var exists = +(await (await db.query(query)).rows[0].count);
 
     if (!exists) {
       throw Boom.notFound();
+    }
+
+    query = {
+      text:
+        'SELECT COUNT(id) FROM public."BookExchange" WHERE "toBook" = $1 OR "fromBook" = $1',
+      values: [id]
+    };
+
+    exists = +(await (await db.query(query)).rows[0].count);
+
+    if (exists > 0) {
+      throw Boom.badRequest('IN_USE');
     }
 
     query = {

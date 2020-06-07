@@ -115,21 +115,21 @@ const addExchange = async (request, h) => {
 
     await db.query(query);
 
-    query = {
-      text:
-        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
-      values: [value.toUser, value.fromBook, value.fromUser]
-    };
+    // query = {
+    //   text:
+    //     'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+    //   values: [value.toUser, value.fromBook, value.fromUser]
+    // };
 
-    await db.query(query);
+    // await db.query(query);
 
-    query = {
-      text:
-        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
-      values: [value.fromUser, value.toBook, value.toUser]
-    };
+    // query = {
+    //   text:
+    //     'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+    //   values: [value.fromUser, value.toBook, value.toUser]
+    // };
 
-    await db.query(query);
+    // await db.query(query);
 
     return h.response().code(201);
   } catch (e) {
