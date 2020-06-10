@@ -21,8 +21,8 @@ const getAllExchanges = async (request, h) => {
   }
 };
 
-// Gets a bok exchange by id
-const getExchangeById = async (request, h) => {
+// Gets a book exchange by id
+const getExchangeByUserId = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -31,25 +31,51 @@ const getExchangeById = async (request, h) => {
     }
 
     var query = {
-      text: 'SELECT COUNT(id) FROM public."BookExchange" WHERE id = $1',
-      values: [id]
-    };
-
-    const exists = +(await (await db.query(query)).rows[0].count);
-
-    if (!exists) {
-      throw Boom.notFound();
-    }
-
-    query = {
       text:
-        'SELECT BE.*, TU.username AS "toUserName", FU.username AS "fromUserName", TB.name AS "toBookName", FB.name AS "fromBookName" FROM public."BookExchange" BE JOIN public."AppUser" TU ON TU.id = BE."toUser" JOIN public."AppUser" FU ON FU.id = BE."fromUser" JOIN public."Book" TB ON TB.id = BE."toBook"  JOIN public."Book" FB ON FB.id = BE."fromBook" WHERE BE.id = $1',
+        'SELECT BE.*, TU.username AS "toUser", FU.username AS "fromUser", TB.name AS "toBook", FB.name AS "fromBook" FROM public."BookExchange" BE JOIN public."AppUser" TU ON TU.id = BE."toUser" JOIN public."AppUser" FU ON FU.id = BE."fromUser" JOIN public."Book" TB ON TB.id = BE."toBook"  JOIN public."Book" FB ON FB.id = BE."fromBook" WHERE BE."toUser" = $1 OR BE."fromUser" = $1',
       values: [id]
     };
 
-    const book = await (await db.query(query)).rows[0];
+    const book = await (await db.query(query)).rows;
 
     return book;
+  } catch (e) {
+    if (e.isBoom) {
+      throw new Boom.Boom(e.output.payload.message, {
+        statusCode: e.output.statusCode
+      });
+    } else {
+      console.log(e);
+      throw Boom.internal();
+    }
+  }
+};
+
+const getValidExchanges = async (request, h) => {
+  try {
+    const { userId, categoryId } = request.payload;
+
+    var query = {
+      text:
+        'SELECT B.*, AU.username from public."Book" B JOIN public."AppUser" AU ON B."user" = AU.id'
+    };
+
+    const books = await (await db.query(query)).rows;
+
+    var res = [];
+
+    books.forEach((book) => {
+      if (book.category === categoryId && book.user !== userId) {
+        res.push({
+          bookId: book.id,
+          book: book.name,
+          userId: book.user,
+          user: book.username
+        });
+      }
+    });
+
+    return res;
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -115,21 +141,21 @@ const addExchange = async (request, h) => {
 
     await db.query(query);
 
-    // query = {
-    //   text:
-    //     'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
-    //   values: [value.toUser, value.fromBook, value.fromUser]
-    // };
+    query = {
+      text:
+        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+      values: [value.toUser, value.fromBook, value.fromUser]
+    };
 
-    // await db.query(query);
+    await db.query(query);
 
-    // query = {
-    //   text:
-    //     'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
-    //   values: [value.fromUser, value.toBook, value.toUser]
-    // };
+    query = {
+      text:
+        'UPDATE public."Book" SET "user" = $1 WHERE id = $2 AND "user" = $3',
+      values: [value.fromUser, value.toBook, value.toUser]
+    };
 
-    // await db.query(query);
+    await db.query(query);
 
     return h.response().code(201);
   } catch (e) {
@@ -270,7 +296,8 @@ const deleteExchange = async (request, h) => {
 
 module.exports = {
   getAllExchanges,
-  getExchangeById,
+  getExchangeByUserId,
+  getValidExchanges,
   addExchange,
   updateExchange,
   deleteExchange

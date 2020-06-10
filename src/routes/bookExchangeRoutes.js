@@ -14,7 +14,12 @@ const routes = [
   {
     method: 'GET',
     path: '/exchange/{id}',
-    handler: BookExchangeController.getExchangeById
+    handler: BookExchangeController.getExchangeByUserId
+  },
+  {
+    method: 'POST',
+    path: '/exchange/valid/',
+    handler: BookExchangeController.getValidExchanges
   },
   {
     method: 'PUT',

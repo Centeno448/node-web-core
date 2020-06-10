@@ -14,7 +14,17 @@ const routes = [
   {
     method: 'GET',
     path: '/rating/{id}',
-    handler: RatingController.getRatingById
+    handler: RatingController.getRatingByUserId
+  },
+  {
+    method: 'GET',
+    path: '/rating/recieved/{id}',
+    handler: RatingController.getRatingToUserId
+  },
+  {
+    method: 'GET',
+    path: '/rating/users/{id}',
+    handler: RatingController.getUsersToRate
   },
   {
     method: 'PUT',

@@ -20,8 +20,7 @@ const getAllRatings = async (request, h) => {
   }
 };
 
-// Gets a rating by id
-const getRatingById = async (request, h) => {
+const getUsersToRate = async (request, h) => {
   try {
     const id = +request.params.id;
 
@@ -29,25 +28,94 @@ const getRatingById = async (request, h) => {
       throw Boom.badRequest('BAD_ID');
     }
 
-    var query = {
-      text: 'SELECT COUNT(id) FROM public."Rating" WHERE id = $1',
+    query = {
+      text:
+        'SELECT "toUser", "fromUser" FROM public."BookExchange" WHERE "toUser" = $1 OR "fromUser" = $1',
       values: [id]
     };
 
-    const exists = +(await (await db.query(query)).rows[0].count);
+    const res = await (await db.query(query)).rows;
 
-    if (!exists) {
-      throw Boom.notFound();
+    var userIds = [];
+
+    res.forEach((element) => {
+      if (element.toUser != id && !userIds.includes(element.toUser)) {
+        userIds.push(element.toUser);
+      }
+      if (element.fromUser != id && !userIds.includes(element.fromUser)) {
+        userIds.push(element.fromUser);
+      }
+    });
+
+    query = {
+      text: `SELECT id, username FROM public."AppUser" WHERE id IN(${userIds.join(
+        ','
+      )})`
+    };
+
+    const users = await (await db.query(query)).rows;
+
+    return users;
+  } catch (e) {
+    if (e.isBoom) {
+      throw new Boom.Boom(e.output.payload.message, {
+        statusCode: e.output.statusCode
+      });
+    } else {
+      console.log(e);
+      throw Boom.internal();
+    }
+  }
+};
+
+// Gets a rating by id
+const getRatingByUserId = async (request, h) => {
+  try {
+    const id = +request.params.id;
+
+    if (!id || id < 0) {
+      throw Boom.badRequest('BAD_ID');
     }
 
     query = {
-      text: 'SELECT * FROM public."Rating" WHERE id = $1',
+      text:
+        'SELECT R.id, R.score, R.comment, TU.username AS "toUser", FU.username AS "fromUser" FROM public."Rating" R JOIN public."AppUser" TU on TU.id = R."toUser" JOIN public."AppUser" FU on FU.id = R."fromUser" WHERE R."fromUser" = $1 ORDER BY R.id',
       values: [id]
     };
 
-    const book = await (await db.query(query)).rows[0];
+    const rating = await (await db.query(query)).rows;
 
-    return book;
+    return rating;
+  } catch (e) {
+    if (e.isBoom) {
+      throw new Boom.Boom(e.output.payload.message, {
+        statusCode: e.output.statusCode
+      });
+    } else {
+      console.log(e);
+      throw Boom.internal();
+    }
+  }
+};
+
+// Gets a rating by id
+const getRatingToUserId = async (request, h) => {
+  try {
+    const id = +request.params.id;
+
+    if (!id || id < 0) {
+      throw Boom.badRequest('BAD_ID');
+    }
+
+    query = {
+      text:
+        'SELECT R.id, R.score, R.comment, TU.username AS "toUser", FU.username AS "fromUser" FROM public."Rating" R JOIN public."AppUser" TU on TU.id = R."toUser" JOIN public."AppUser" FU on FU.id = R."fromUser" WHERE R."toUser" = $1 ORDER BY R.id',
+      values: [id]
+    };
+
+    const rating = await (await db.query(query)).rows;
+
+    return rating;
   } catch (e) {
     if (e.isBoom) {
       throw new Boom.Boom(e.output.payload.message, {
@@ -219,8 +287,10 @@ const deleteRating = async (request, h) => {
 
 module.exports = {
   getAllRatings,
-  getRatingById,
+  getRatingByUserId,
+  getRatingToUserId,
   addRating,
+  getUsersToRate,
   updateRating,
   deleteRating
 };
