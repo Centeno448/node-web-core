@@ -97,6 +97,8 @@ const addExchange = async (request, h) => {
       throw Boom.badRequest('BAD_PAYLOAD');
     }
 
+    console.log(value);
+
     var query = {
       text: 'SELECT * FROM public."AppUser" WHERE id IN($1, $2)',
       values: [value.toUser, value.fromUser]

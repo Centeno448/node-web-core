@@ -1,8 +1,21 @@
 const Boom = require('@hapi/boom');
 const db = require('../db/database');
 
-const formatter = new Intl.DateTimeFormat('es', { month: 'short' });
-
+const formatter = new Intl.DateTimeFormat('es-EC', { month: 'long' });
+const monthTranslator = {
+  January: 'Enero',
+  February: 'Febrero',
+  March: 'Marzo',
+  April: 'Abril',
+  May: 'Mayo',
+  June: 'Junio',
+  July: 'Julio',
+  August: 'Agosto',
+  September: 'Septiembre',
+  October: 'Octubre',
+  November: 'Noviembre',
+  December: 'Diciembre'
+};
 /*
 listado de promedio de Reseñas de usuarios
 
@@ -55,6 +68,11 @@ const averageUserRating = async (request, h) => {
     });
 
     users.sort((a, b) => b.averageScore - a.averageScore);
+    var i = 0;
+    users.forEach((user) => {
+      user.index = i;
+      i++;
+    });
 
     return users.filter((element, index) => {
       return index < 5;
@@ -91,11 +109,11 @@ const mostExchangedBooks = async (request, h) => {
         books.push({
           id: row.toBookId,
           name: row.toBook,
-          amountOfExchanges: 1
+          value: 1
         });
       } else {
         var found = books.find((book) => book.id == row.toBookId);
-        found.amountOfExchanges++;
+        found.value++;
       }
 
       if (!uniqueBooks.includes(row.fromBookId)) {
@@ -104,15 +122,15 @@ const mostExchangedBooks = async (request, h) => {
         books.push({
           id: row.fromBookId,
           name: row.fromBook,
-          amountOfExchanges: 1
+          value: 1
         });
       } else {
         var found = books.find((book) => book.id == row.fromBookId);
-        found.amountOfExchanges++;
+        found.value++;
       }
     });
 
-    books.sort((a, b) => b.amountOfExchanges - a.amountOfExchanges);
+    books.sort((a, b) => b.value - a.value);
 
     return books.filter((element, index) => {
       return index < 5;
@@ -135,7 +153,7 @@ const mostExchangedCategories = async (request, h) => {
         join public."Book" TB on TB.id = BE."toBook"
         join public."Book" FB on FB.id = BE."fromBook"
         join public."BookCategory" TC on TC.id = TB.category
-        join public."BookCategory" FC on FC.id = TB.category
+        join public."BookCategory" FC on FC.id = FB.category
         `
     };
 
@@ -161,14 +179,18 @@ const mostExchangedCategories = async (request, h) => {
           toCategory: row.toCategory,
           fromCategoryId: row.fromCategoryId,
           fromCategory: row.fromCategory,
-          amountOfExchanges: 1
+          value: 1
         });
       } else {
-        combination.amountOfExchanges++;
+        combination.value++;
       }
     });
 
-    combinations.sort((a, b) => b.amountOfExchanges - a.amountOfExchanges);
+    combinations.forEach((combination) => {
+      combination.name = `${combination.toCategory}-${combination.fromCategory}`;
+    });
+
+    combinations.sort((a, b) => b.value - a.value);
 
     return combinations.filter((element, index) => {
       return index < 5;
@@ -204,15 +226,15 @@ const mostExchangesByUsers = async (request, h) => {
 
         users.push({
           id: row.toUserId,
-          username: row.toUser,
-          amountOfExchanges: 1
+          name: row.toUser,
+          value: 1
         });
       } else {
         var found = users.find((user) => {
           return user.id == row.toUserId;
         });
 
-        found.amountOfExchanges++;
+        found.value++;
       }
 
       if (!uniqueUsers.includes(row.fromUserId)) {
@@ -220,19 +242,19 @@ const mostExchangesByUsers = async (request, h) => {
 
         users.push({
           id: row.fromUserId,
-          username: row.fromUser,
-          amountOfExchanges: 1
+          name: row.fromUser,
+          value: 1
         });
       } else {
         var found = users.find((user) => {
           return user.id == row.fromUserId;
         });
 
-        found.amountOfExchanges++;
+        found.value++;
       }
     });
 
-    users.sort((a, b) => b.amountOfExchanges - a.amountOfExchanges);
+    users.sort((a, b) => b.value - a.value);
 
     return users.filter((element, index) => {
       return index < 5;
@@ -246,40 +268,63 @@ const mostExchangesByUsers = async (request, h) => {
 // Gets a list of the top 5 months where exchanges ocurred
 const mostExchangesByMonth = async (request, h) => {
   try {
-    //console.log(request.auth.credentials);
+    var currentYear = new Date().getFullYear();
+    var startDate = `${currentYear}-01-01`;
+    var endDate = `${currentYear}-12-31`;
+
+    var months = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ];
+
+    var data = [];
+
+    months.forEach((month) => {
+      data.push({
+        name: month,
+        series: [
+          {
+            name: `${currentYear}`,
+            value: 0
+          }
+        ]
+      });
+    });
 
     var query = {
       text: `
         select BE."exchangeDate"
         from public."BookExchange" BE
-        `
+        where BE."exchangeDate" BETWEEN $1 AND $2
+        `,
+      values: [startDate, endDate]
     };
 
     const { rows } = await db.query(query);
 
-    var months = [];
-
     rows.forEach((row) => {
       var month = formatter.format(new Date(row.exchangeDate));
 
-      var found = months.find((item) => {
-        return item.month == month;
+      var found = data.find((item) => {
+        return item.name == monthTranslator[month];
       });
 
-      var exists = !!found;
-
-      if (!exists) {
-        months.push({ month, amountOfExchanges: 1 });
-      } else {
-        found.amountOfExchanges++;
-      }
+      found.series[0].value++;
     });
 
-    months.sort((a, b) => b.amountOfExchanges - a.amountOfExchanges);
+    data.sort((a, b) => b.amountOfExchanges - a.amountOfExchanges);
 
-    return months.filter((element, index) => {
-      return index < 5;
-    });
+    return data;
   } catch (e) {
     console.log(e);
     throw Boom.internal();
