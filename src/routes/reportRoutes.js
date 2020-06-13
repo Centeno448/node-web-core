@@ -25,6 +25,11 @@ const routes = [
     method: 'GET',
     path: '/report/mostExchangesByMonth',
     handler: reportController.mostExchangesByMonth
+  },
+  {
+    method: 'GET',
+    path: '/report/failedExchanges',
+    handler: reportController.failedExchanges
   }
 ];
 

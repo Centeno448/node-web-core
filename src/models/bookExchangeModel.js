@@ -9,5 +9,7 @@ exports.BookExchangeModel = Joi.object({
 
   toBook: Joi.number().integer().required(),
 
-  exchangeDate: Joi.date().format('YYYY-MM-DD').required()
+  exchangeDate: Joi.date().format('YYYY-MM-DD').required(),
+
+  failed: Joi.boolean()
 });

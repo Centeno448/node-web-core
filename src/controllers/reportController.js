@@ -16,17 +16,6 @@ const monthTranslator = {
   November: 'Noviembre',
   December: 'Diciembre'
 };
-/*
-listado de promedio de Reseñas de usuarios
-
-Libros mas intercambiados
-
-Categorias mas intercambiadas
-
-Usuario con mayor cantidad de intercambios
-
-Mes con mayor cantidad de intercambios
-*/
 
 // Gets a list of the top 5 users with the best average rating score.
 const averageUserRating = async (request, h) => {
@@ -331,10 +320,52 @@ const mostExchangesByMonth = async (request, h) => {
   }
 };
 
+// Gets a list of the top 5 months where exchanges ocurred
+const failedExchanges = async (request, h) => {
+  try {
+    var query = {
+      text: `SELECT BE."exchangeFailed"
+        FROM public."BookExchange" BE
+        `
+    };
+
+    const { rows } = await db.query(query);
+
+    var result = [
+      {
+        name: 'Fallidos',
+        value: 0
+      },
+      {
+        name: 'OK',
+        value: 0
+      }
+    ];
+
+    rows.forEach((row) => {
+      if (!!row.exchangeFailed) {
+        if (row.exchangeFailed) {
+          result[0].value++;
+        } else {
+          result[1].value++;
+        }
+      } else {
+        result[1].value++;
+      }
+    });
+
+    return result;
+  } catch (e) {
+    console.log(e);
+    throw Boom.internal();
+  }
+};
+
 module.exports = {
   averageUserRating,
   mostExchangedBooks,
   mostExchangedCategories,
   mostExchangesByUsers,
-  mostExchangesByMonth
+  mostExchangesByMonth,
+  failedExchanges
 };

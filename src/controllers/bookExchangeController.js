@@ -131,13 +131,14 @@ const addExchange = async (request, h) => {
 
     query = {
       text:
-        'INSERT INTO public."BookExchange" ("fromUser", "toUser", "fromBook", "toBook", "exchangeDate") VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO public."BookExchange" ("fromUser", "toUser", "fromBook", "toBook", "exchangeDate", "exchangeFailed") VALUES ($1, $2, $3, $4, $5, $6)',
       values: [
         value.fromUser,
         value.toUser,
         value.fromBook,
         value.toBook,
-        value.exchangeDate
+        value.exchangeDate,
+        value.failed
       ]
     };
 
@@ -229,14 +230,17 @@ const updateExchange = async (request, h) => {
     }
 
     query = {
-      text:
-        'UPDATE public."BookExchange" SET "toUser" = $1, "fromUser" = $2, "toBook" = $3, "fromBook" = $4, "exchangeDate" = $5 WHERE id = $6',
+      text: `UPDATE public."BookExchange" SET
+        "toUser" = $1, "fromUser" = $2, "toBook" = $3, "fromBook" = $4,
+        "exchangeDate" = $5, "exchangeFailed" = $6
+        WHERE id = $7`,
       values: [
         value.toUser,
         value.fromUser,
         value.toBook,
         value.fromBook,
         value.exchangeDate,
+        value.failed,
         id
       ]
     };
