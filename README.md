@@ -4,7 +4,7 @@ Node.js Backend para proyecto de Ingeniería Web
 ## Requerimientos
 
 - [Node.js](https://nodejs.org/en/).
-- [Base de datos Postgres](https://www.postgresql.org/) y un [DBMS](https://www.pgadmin.org/) (en el archivo postgres.sql se encuentra la estructura de la base).
+- [Base de datos Postgres](https://www.postgresql.org/) y un [DBMS](https://www.pgadmin.org/) (en el archivo postgres.sql se encuentra un backup de la base para restaurar en pgadmin).
 - Ganas de leer los mensajes de error que inevitablemente saldran al tratar de instalar.
 
 ## Pasos
